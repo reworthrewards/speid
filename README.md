@@ -1,4 +1,4 @@
-## SPEID
+## stpProxy
 
 [![Test](https://github.com/cuenca-mx/speid/workflows/Test/badge.svg)](https://github.com/cuenca-mx/speid/actions?query=workflow%3ATest)
 [![codecov](https://codecov.io/gh/cuenca-mx/speid/branch/master/graph/badge.svg)](https://codecov.io/gh/cuenca-mx/speid)
@@ -6,23 +6,32 @@
 [![](https://images.microbadger.com/badges/version/cuenca/speid:1.9.4.svg)](https://microbadger.com/images/cuenca/speid:1.9.4 "Get your own version badge on microbadger.com")
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
+**
+Este es un Fork de (cuenca-mx/speid)[https://github.com/cuenca-mx/speid] (Gracias!).
+Se realizan ajustes para mantener estas premisas:
+
+- Hacerlo agnóstico a la plataforma donde será desplegado (Se quita lo relacionado a Aptible y NewRelic)
+- Hacerlo agnóstico al lenguaje de programación del backend con el que se comunique (Se usa Celery solo internamente)
+
+**
+
 Una forma robusta de comunicarse con STP, utilizando la librería 
-[stpmex](https://pypi.org/project/stpmex/) para el manejo de transferencias 
-eléctronicas. Hay dos puntos importantes:
+[stpmex](https://pypi.org/project/stpmex/) para el manejo de transferencias eléctronicas. Hay dos puntos importantes:
 
-- **Envío de transferencias** Debe haber un backend que coloque las órdenes de 
-transferencias en una cola de RabbitMQ. SPEID tomará las órdenes de ahí para enviarlas 
-por STP. En caso de cualquier falla, la orden se vuelve a colocar en la cola y se 
-reintenta hasta 3 veces. En caso de que la orden no pueda ser enviada, esta se 
-queda en la cola para poder ser revisada manualmente. Por otro lado, cuando la orden
- es enviada con éxito, se recibe la respuesta de STP en `orden_events` para hacer el 
- llamado al backend y confirmar o cancelar la orden.
+- **Envío de transferencias** Enviar los datos de la transferencia a `PUT /registra`. 
+`stpProxy` encola la petición e intentará enviarla hasta 5 veces en los primeros 30 segundos,
+después lo intentará cada 20 minutos hasta que haya un total de 12 intentos.
+Después de los 12 intentos la orden puede volver a ser enviada manualmente usando este comando:
+```python
+TODO comando
+```
+Por otro lado, cuando la orden es enviada con éxito, se recibe la respuesta de STP en `POST /orden_events` 
+para hacer el llamado al mismo endpoint en el backend y confirmar o cancelar la orden.
 
-- **Recepción de transferencias** Las órdenes se reciben en `ordenes` y hace un llamado
-al backend para poder recibir las órdenes, en caso de un error en el backend la orden 
-se confirma pero se mantiene en la base de datos para poder ser reprocesada 
-porteriormente.
- 
+- **Recepción de transferencias** Las órdenes se reciben en `POST /ordenes` y hace un llamado
+al backend con el mismo endpoint para poder recibir las órdenes, 
+en caso de un error en el backend la orden se confirma pero se mantiene en la base de datos 
+para poder ser reprocesada porteriormente. 
 
 ### Requerimientos
 
@@ -34,15 +43,14 @@ porteriormente.
 
 ### Instalación
 
-El archivo `env.template` contiene todos los parámetros necesarios para hacer funcionar 
-SPEID, es necesario completar los faltantes como las credenciales de STP, la URL de 
-Sentry o la URL de MongoDB para realizar la conexión.
+El archivo `env.template` contiene todos los parámetros necesarios para hacer funcionar el proxy,
+es necesario completar los faltantes como las credenciales de STP, el DSN de Sentry o
+la URL de MongoDB para realizar la conexión.
 
 Después de esto, solo es necesario utilizar un gestor de contenedores para ejecutar 
 la imagen de Docker incluida en el proyecto.
 
-En caso de ser necesario ejectuarlo en una máquina local, copiar el archivo 
-`env.template` a `.env` y sustituir las credenciales de STP y Sentry. Posteriormente, 
+En caso de ser necesario ejectuarlo en una máquina local, poner en el archivo `.env` las variables correspondientes. Posteriormente,
 utilizar el archivo `docker-compose` incluido que levanta todos los servicios necesarios.
 ``` bash
 docker-compose up
@@ -50,10 +58,11 @@ docker-compose up
 
 ### Test
 
-Para ejecutar los test localmente, se puede utilizar y utilizar la variable de ambiente `DATABASE_URI` 
+Para ejecutar los test localmente, se puede utilizar la variable de ambiente `DATABASE_URI` 
 por `mongomock://localhost:27017/db`:
 
 ```bash
+cp env.template .env
 make install-dev
 make test
 ```
@@ -86,12 +95,11 @@ al terminar.
 Cuando se recibe una nueva orden SPEI, STP hace una llamada al 
 servicio `/ordenes`. Se crea una transacción en la tabla `transactions`
 y se asocia un evento tipo `create`. Posteriormente, se hace un POST al endpoint 
-definido en la variable de ambiente `CALLBACK_URL`. El servicio aguarda 15 segundos a 
+definido en la variable de ambiente `BACKEND_URL`. El servicio aguarda 15 segundos a 
 obtener una respuesta la cual es almacenada en un nuevo Evento asociado a la 
 Transacción y se responde a STP.
 
-El cuerpo del mensaje almacenado en RabbitMQ es como sigue:
-
+El cuerpo del mensaje enviado al backend es como sigue:
 ```python
 {
 'orden_id': 6440277,                              # Orden ID de STP 
@@ -110,49 +118,27 @@ El cuerpo del mensaje almacenado en RabbitMQ es como sigue:
 'rfc_curp_beneficiario': 'No capturado.', 
 'concepto_pago': 'Test2', 
 'referencia_numerica': 181006, 
-'empresa': 'TAMIZI', 
+'empresa': 'TU_EMPESA',
+'speid_id': 'SPEID_ID'                        # Es un ID auto-generado y debe ser único para cada orden
 }
 ```
 
 #### Enviar una orden
 
-Si el cliente quiere realizar una transferencia, entonces el backend debe
-colocar la tarea en RabbitMQ: 
-
-```python
-from celery import Celery
-
-order = dict(
-            concepto_pago='PRUEBA',
-            institucion_ordenante='646',
-            cuenta_beneficiario='072691004495711499',
-            institucion_beneficiaria='072',
-            monto=1020,
-            nombre_beneficiario='Ricardo Sánchez',
-            nombre_ordenante='BANCO',
-            cuenta_ordenante='646180157000000004',
-            rfc_curp_ordenante='ND',
-            speid_id='SOME_RANDOM_ID',
-            version=2
-        )
-app = Celery('speid')
-app.send_task('speid.tasks.orders', kwargs={'order_val': order})
-```
-
-Estos son los campos obligatorios a incluir en la orden:
+Si el cliente quiere realizar una transferencia, entonces el backend hacer un `POST /registra`
+con los siguientes campos obligatorios:
 
 ```python
 {
-    "concepto_pago": "Concepto"
-    "institucion_ordenante": "Código del banco en SPEI",
+    "nombre_beneficiario": "Nombre",
     "cuenta_beneficiario": "CLABE del beneficiario",
     "institucion_beneficiaria": "Código del banco en SPEI",
-    "monto": 120, # Cantidad en centavos
-    "nombre_beneficiario": "Nombre",
     "nombre_ordenante": "Nombre",
     "cuenta_ordenante": "CLABE del ordenante",
+    "institucion_ordenante": "Código del banco en SPEI",
     "rfc_curp_ordenante": "RFC",
-    "version": 2 # Actualmente solo es soportada la versión 2
+    "monto": 120, # Cantidad en centavos
+    "concepto_pago": "Concepto"
 }
 ```
 
@@ -188,25 +174,15 @@ Campos opcionales:
 }
 ```
 
-Al momento de agregar la tarea de Celery, está es ejecutada por el Daemon
-y se genera una nueva transacción con su correspondiente evento,
-posteriormente se envía la orden al proveedor (STP) y el resultado se almacena
-en un nuevo evento y se notifica al backend haciendo un PATCH al endpoint 
-definido en la variable de ambiente `CALLBACK_URL` con el ID del request en la URL:
+Posteriormente el backend recibirá un evento de cambio de estado en el endpoint `POST /orden_events`
 
 ```python
 {
 'speid_id': 'SOME_ID',
 'orden_id': 'orden_id',
-'estado': 'submitted'
+'estado': 'submitted'    # [sucess, failed]
 }
 ```
-
-Cuando STP responde con el resultado de la operación, se recibe en el
-servicio `/orden_events` el cual busca la transacción por el ID de la orden y
-almacena un nuevo Evento. Posteriormente se notifica al backend haciendo un PATCH al 
-endpoint definido en la variable de ambiente `CALLBACK_URL` con el ID del request en la 
-URL.
 
 El estado en el que puede responder STP para una transferencia son los siguientes:
 1. `LIQUIDACION`: La transferencia fue exitosa.
@@ -215,27 +191,5 @@ para transferencias con destino a Instituciones participantes directos de SPEI.
 3. `CANCELACION`: No fue posible realizar la transferencia. Este caso aplica 
 para transferencias con destino a Instituciones que en su CLABE tengan el prefijo **646**, es decir, clientes de STP.
 
-Cabe aclarar que en `speid` el estado `LIQUIDACION` mapea a `succeeded`, mientras que 
+Cabe aclarar que el estado `LIQUIDACION` mapea a `succeeded`, mientras que
 `DEVOLUCION` y `CANCELACION` mapean a `failed` para retornarse al backend.
-
-Este es el cuerpo del mensaje en RabbitMQ:
-
-````python
-{
-'orden_id': 'orden_id', 
-'estado': 'success',    # Opciones [success, failed] 
-'speid_id': 'SOME_ID'
-}
-````
-En caso de querer realizar el callback al backend mediante queue se debe 
-establecer las siguientes variables de entorno
-```
-SEND_TRANSACTION_TASK=ruta_de_la_tarea_transacciones de entrada``
-
-SEND_STATUS_TRANSACTION_TASK=ruta_de_la_tarea_para_el_status``
-
-CALLBACK_QUEUE_ACTIVE=true
-
-```
-___
-Hecho con ❤️ en [Cuenca](https://cuenca.com/)

@@ -2,7 +2,7 @@ version: '3'
 
 services:
   db:
-    image: mongo:4.0
+    image: mongo
 
   rabbitmq:
     image: rabbitmq
