@@ -3,10 +3,8 @@ from datetime import datetime
 from typing import Callable
 
 from blinker.base import NamedSignal
-from mongoengine import (
-    DateTimeField,
-    signals,
-)
+from mongoengine import DateTimeField, signals
+
 from speid.models import Event
 
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')

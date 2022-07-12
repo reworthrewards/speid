@@ -12,4 +12,3 @@ class MalformedOrderException(ValueError):
 
 class ResendSuccessOrderException(ValueError):
     ...
-

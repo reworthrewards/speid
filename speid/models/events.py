@@ -1,6 +1,6 @@
 import datetime as dt
 
-from mongoengine import Document, DateTimeField, StringField
+from mongoengine import DateTimeField, Document, StringField
 
 
 class Event(Document):

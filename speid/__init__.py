@@ -1,4 +1,11 @@
-__all__ = ['STP_EMPRESA', 'backend_client', 'config', 'commands', 'models', 'views']
+__all__ = [
+    'STP_EMPRESA',
+    'backend_client',
+    'config',
+    'commands',
+    'models',
+    'views',
+]
 
 import datetime as dt
 import json
@@ -75,4 +82,10 @@ configure_environment()
 with open(STP_PRIVATE_LOCATION) as fp:
     private_key = fp.read()
 
-from . import backend_client, config, commands, models, views  # noqa: E402 isort:skip
+from . import (
+    backend_client,
+    config,
+    commands,
+    models,
+    views,
+)  # noqa: E402 isort:skip

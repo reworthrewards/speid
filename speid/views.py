@@ -6,7 +6,7 @@ from sentry_sdk import capture_exception
 
 from speid import app
 from speid.helpers.transaction_helper import process_incoming_transaction
-from speid.models import Transaction, Event
+from speid.models import Event, Transaction
 from speid.types import Estado
 from speid.utils import post
 

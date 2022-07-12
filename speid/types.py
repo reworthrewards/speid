@@ -1,5 +1,6 @@
-from pydantic.dataclasses import dataclass
 from enum import Enum
+
+from pydantic.dataclasses import dataclass
 
 
 class HttpRequestMethod(Enum):

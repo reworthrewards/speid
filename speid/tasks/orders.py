@@ -3,10 +3,7 @@ import luhnmod10
 from mongoengine import DoesNotExist
 from sentry_sdk import capture_exception
 
-from speid.exc import (
-    MalformedOrderException,
-    ResendSuccessOrderException,
-)
+from speid.exc import MalformedOrderException, ResendSuccessOrderException
 from speid.models import Transaction
 from speid.tasks import celery
 from speid.types import Estado

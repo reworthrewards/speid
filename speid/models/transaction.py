@@ -15,13 +15,7 @@ from speid.processors import stpmex_client
 from speid.types import Estado
 
 from .events import Event
-from .helpers import (
-    date_now,
-    delete_events,
-    handler,
-    save_events,
-    updated_at,
-)
+from .helpers import date_now, delete_events, handler, save_events, updated_at
 
 
 @handler(signals.pre_save)
