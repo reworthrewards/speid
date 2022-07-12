@@ -82,10 +82,10 @@ configure_environment()
 with open(STP_PRIVATE_LOCATION) as fp:
     private_key = fp.read()
 
-from . import (
+from . import (  # noqa: E402 isort:skip
     backend_client,
-    config,
     commands,
+    config,
     models,
     views,
-)  # noqa: E402 isort:skip
+)

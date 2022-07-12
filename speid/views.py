@@ -1,17 +1,17 @@
 import json
 import logging
 
-from mongoengine import NotUniqueError
 from flask import request
+from mongoengine import NotUniqueError
 from sentry_sdk import capture_exception
 
 from speid import app
-from speid.tasks.orders import send_order
 from speid.models import Event, Transaction
-from speid.types import Estado, UpdateOrderType
-from speid.validations import StpTransaction
-from speid.utils import post
 from speid.processors import backend_client
+from speid.tasks.orders import send_order
+from speid.types import Estado, UpdateOrderType
+from speid.utils import post
+from speid.validations import StpTransaction
 
 logging.basicConfig(level=logging.INFO, format='SPEID: %(message)s')
 
@@ -33,7 +33,11 @@ def create_orden_events():
             assert transaction.estado is not Estado.failed
 
         transaction.set_status(state)
-        update_request = UpdateOrderType(speid_id=transaction.speid_id, orden_id=transaction.stp_id, estado=state)
+        update_request = UpdateOrderType(
+            speid_id=transaction.speid_id,
+            orden_id=transaction.stp_id,
+            estado=state,
+        )
         backend_client.update_order(update_request)
 
         transaction.save()

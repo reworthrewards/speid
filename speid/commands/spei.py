@@ -28,7 +28,11 @@ def set_status_transaction(speid_id, transaction_status):
         raise ValueError('Invalid event type')
     transaction.set_status(status)
     transaction.save()
-    update_order = UpdateOrderType(speid_id=transaction.speid_id, orden_id=transaction.stp_id, estado=status)
+    update_order = UpdateOrderType(
+        speid_id=transaction.speid_id,
+        orden_id=transaction.stp_id,
+        estado=status,
+    )
     client = BackendClient()
     client.update_order(update_order)
 

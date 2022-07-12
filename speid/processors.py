@@ -1,6 +1,7 @@
 import os
 
 from stpmex import Client
+
 from speid.backend_client import BackendClient
 
 STP_PRIVATE_LOCATION = os.environ['STP_PRIVATE_LOCATION']
