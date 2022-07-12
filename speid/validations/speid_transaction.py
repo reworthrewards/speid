@@ -1,14 +1,12 @@
 from typing import Optional
 
-from pydantic import StrictStr
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel, StrictStr
 from stpmex.types import TipoCuenta
 
 from speid.models import Transaction
 
 
-@dataclass
-class SpeidTransaction:
+class SpeidTransaction(BaseModel):
     concepto_pago: StrictStr
     institucion_ordenante: StrictStr
     cuenta_beneficiario: StrictStr

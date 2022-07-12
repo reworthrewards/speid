@@ -1,7 +1,5 @@
 from enum import Enum
 
-from pydantic.dataclasses import dataclass
-
 
 class HttpRequestMethod(Enum):
     get = 'GET'
@@ -42,10 +40,3 @@ class Estado(str, Enum):
             cls.rejected: 'DEVOLUCION',
         }
         return status_to_stp.get(status, 'DEVOLUCION')  # type: ignore
-
-
-@dataclass
-class UpdateOrderType:
-    speid_id: str
-    orden_id: str
-    estado: Estado

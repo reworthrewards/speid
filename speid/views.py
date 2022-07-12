@@ -9,9 +9,9 @@ from speid import app
 from speid.models import Event, Transaction
 from speid.processors import backend_client
 from speid.tasks.orders import send_order
-from speid.types import Estado, UpdateOrderType
+from speid.types import Estado
 from speid.utils import post
-from speid.validations import StpTransaction
+from speid.validations import StpTransaction, UpdateSpeidTransaction
 
 logging.basicConfig(level=logging.INFO, format='SPEID: %(message)s')
 
@@ -33,7 +33,7 @@ def create_orden_events():
             assert transaction.estado is not Estado.failed
 
         transaction.set_status(state)
-        update_request = UpdateOrderType(
+        update_request = UpdateSpeidTransaction(
             speid_id=transaction.speid_id,
             orden_id=transaction.stp_id,
             estado=state,

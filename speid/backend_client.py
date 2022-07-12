@@ -4,8 +4,7 @@ from requests import Session
 
 from speid.config import BACKEND_JWT_TOKEN, BACKEND_URL
 from speid.exc import BackendError
-from speid.types import UpdateOrderType
-from speid.validations import StpTransaction
+from speid.validations import StpTransaction, UpdateSpeidTransaction
 
 
 class BackendClient:
@@ -18,16 +17,13 @@ class BackendClient:
 
     def __init__(self) -> None:
         self.session = Session()
-        self.session.headers = self._auth_header()
+        self.session.headers['Authorization'] = f'Bearer {BACKEND_JWT_TOKEN}'
 
-    def _auth_header(self) -> dict:
-        return dict(Authorization=f'Bearer {BACKEND_JWT_TOKEN}')
-
-    def update_order(self, update_order: UpdateOrderType) -> None:
+    def update_order(self, update_order: UpdateSpeidTransaction) -> None:
         data = update_order.dict()
         self._request('POST', 'orden_events', data)
 
-    def receive_order(self, transaction: StpTransaction) -> Dict[str, Any]:
+    def receive_order(self, transaction: StpTransaction) -> None:
         data = transaction.dict()
         self._request('POST', 'ordenes', data)
 

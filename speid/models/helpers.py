@@ -1,4 +1,5 @@
 import re
+import uuid
 from datetime import datetime
 from typing import Callable
 
@@ -9,6 +10,30 @@ from speid.models import Event
 
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
 _underscorer2 = re.compile('([a-z0-9])([A-Z])')
+
+
+def base62_encode(num: int) -> str:
+    """
+    http://stackoverflow.com/questions/1119722/base-62-conversion
+    """
+
+    alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    if num == 0:
+        return alphabet[0]
+    arr = []
+    base = len(alphabet)
+    while num:
+        num, rem = divmod(num, base)
+        arr.append(alphabet[rem])
+    arr.reverse()
+    return ''.join(arr)
+
+
+def base62_uuid(prefix=''):
+    def base62_uuid_func() -> str:
+        return prefix + base62_encode(uuid.uuid1().int)
+
+    return base62_uuid_func
 
 
 def camel_to_snake(s: str) -> str:

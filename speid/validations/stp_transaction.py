@@ -1,15 +1,13 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import StrictStr
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel, StrictStr
 
 from speid.models import Transaction
 from speid.models.helpers import base62_uuid, camel_to_snake
 
 
-@dataclass
-class StpTransaction:
+class StpTransaction(BaseModel):
     FechaOperacion: int
     InstitucionOrdenante: str
     InstitucionBeneficiaria: str
@@ -42,8 +40,4 @@ class StpTransaction:
             str(transaction.fecha_operacion), '%Y%m%d'
         ).date()
 
-        (
-            transaction.rfc_ordenante,
-            transaction.curp_ordenante,
-        ) = self.get_rfc_curp()
         return transaction
