@@ -1,13 +1,9 @@
-import datetime
+import datetime as dt
 
-from mongoengine import Document, StringField
-
-from speid.types import EventType
-
-from .helpers import EnumField, date_now
+from mongoengine import Document, DateTimeField, StringField
 
 
 class Event(Document):
-    created_at: datetime.datetime = date_now()
-    type = EnumField(EventType)  # type: ignore
+    created_at = DateTimeField(default=dt.datetime.utcnow)
+    target_document_id = StringField()
     metadata = StringField()

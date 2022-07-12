@@ -1,3 +1,4 @@
+from pydantic.dataclasses import dataclass
 from enum import Enum
 
 
@@ -40,3 +41,10 @@ class Estado(str, Enum):
             cls.rejected: 'DEVOLUCION',
         }
         return status_to_stp.get(status, 'DEVOLUCION')  # type: ignore
+
+
+@dataclass
+class UpdateOrderType:
+    speid_id: str
+    orden_id: str
+    estado: Estado

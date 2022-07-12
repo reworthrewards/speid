@@ -2,9 +2,8 @@ import click
 from mongoengine import DoesNotExist
 
 from speid import app
-from speid.helpers.callback_helper import set_status_transaction
-from speid.models import Event, Transaction
-from speid.types import Estado, EventType
+from speid.models import Transaction
+from speid.types import Estado
 
 
 @app.cli.group('speid')
@@ -33,7 +32,7 @@ def set_status_transaction(speid_id, transaction_status):
 @speid_group.command()
 @click.argument('speid_id', type=str)
 def re_execute_transactions(speid_id):
-        """Encola la transacción para intentar ser enviada
+    """Encola la transacción para intentar ser enviada
     nuevamente"""
     try:
         transaction = Transaction.objects.get(speid_id=speid_id)
@@ -44,4 +43,4 @@ def re_execute_transactions(speid_id):
 
 
 if __name__ == "__main__":
-    re_execute_transactions()  # pragma: no cover
+    ...  # pragma: no cover

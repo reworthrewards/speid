@@ -6,7 +6,7 @@ from sentry_sdk import capture_exception
 
 from speid import app
 from speid.helpers.transaction_helper import process_incoming_transaction
-from speid.models import Transaction
+from speid.models import Transaction, Event
 from speid.types import Estado
 from speid.utils import post
 
@@ -29,7 +29,7 @@ def create_orden_events():
         if state is Estado.failed:
             assert transaction.estado is not Estado.failed
 
-        transaction.set_state(state)
+        transaction.set_status(state)
 
         transaction.save()
     except Exception as exc:
@@ -40,8 +40,25 @@ def create_orden_events():
 
 @post('/ordenes')
 def create_orden():
-    response = process_incoming_transaction(request.json)
-    return 201, response
+    transaction = Transaction()
+    try:
+        external_tx = StpTransaction(request.json)  # type: ignore
+        transaction = external_tx.transform()
+        transaction.estado = Estado.succeeded
+        transaction.confirm_callback_transaction()
+        transaction.save()
+        response = request.json
+        response['estado'] = Estado.convert_to_stp_state(transaction.estado)
+    except (NotUniqueError, TypeError) as e:
+        response = dict(estado='LIQUIDACION')
+        capture_exception(e)
+    except Exception as e:
+        response = dict(estado='LIQUIDACION')
+        transaction.estado = Estado.error
+        Event(target_document_id=transaction.pk, metadata=str(e)).save()
+        transaction.save()
+        capture_exception(e)
+    return response
 
 
 @app.after_request

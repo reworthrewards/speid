@@ -33,6 +33,11 @@ al backend con el mismo endpoint para poder recibir las órdenes,
 en caso de un error en el backend la orden se confirma pero se mantiene en la base de datos 
 para poder ser reprocesada porteriormente. 
 
+#### Backlog
+- Recibir y enviar órdenes al backend por GRPC
+- Módulo de cuentas
+- Descargar de CEP
+
 ### Requerimientos
 
 - Una cuenta de STP
