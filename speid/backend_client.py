@@ -5,6 +5,7 @@ from requests import Session
 from speid.config import BACKEND_JWT_TOKEN, BACKEND_URL
 from speid.exc import BackendError
 from speid.types import UpdateOrderType
+from speid.validations import StpTransaction
 
 
 class BackendClient:
@@ -26,8 +27,9 @@ class BackendClient:
         data = update_order.dict()
         self._request('POST', 'orden_events', data)
 
-    def receive_order(self, update_order: UpdateOrderType) -> Dict[str, Any]:
-        ...
+    def receive_order(self, transaction: StpTransaction) -> Dict[str, Any]:
+        data = transaction.dict()
+        self._request('POST', 'ordenes', data)
 
     def _request(
         self, method: str, endpoint: str, data: Dict[str, Any]

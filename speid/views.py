@@ -1,14 +1,17 @@
 import json
 import logging
 
+from mongoengine import NotUniqueError
 from flask import request
 from sentry_sdk import capture_exception
 
 from speid import app
-from speid.helpers.transaction_helper import process_incoming_transaction
+from speid.tasks.orders import send_order
 from speid.models import Event, Transaction
-from speid.types import Estado
+from speid.types import Estado, UpdateOrderType
+from speid.validations import StpTransaction
 from speid.utils import post
+from speid.processors import backend_client
 
 logging.basicConfig(level=logging.INFO, format='SPEID: %(message)s')
 
@@ -30,6 +33,8 @@ def create_orden_events():
             assert transaction.estado is not Estado.failed
 
         transaction.set_status(state)
+        update_request = UpdateOrderType(speid_id=transaction.speid_id, orden_id=transaction.stp_id, estado=state)
+        backend_client.update_order(update_request)
 
         transaction.save()
     except Exception as exc:
@@ -45,8 +50,8 @@ def create_orden():
         external_tx = StpTransaction(request.json)  # type: ignore
         transaction = external_tx.transform()
         transaction.estado = Estado.succeeded
-        transaction.confirm_callback_transaction()
         transaction.save()
+        backend_client.receive_order(external_tx)
         response = request.json
         response['estado'] = Estado.convert_to_stp_state(transaction.estado)
     except (NotUniqueError, TypeError) as e:
@@ -59,6 +64,11 @@ def create_orden():
         transaction.save()
         capture_exception(e)
     return response
+
+
+@post('/registra')
+def incoming_order():
+    send_order.apply_async(request.json)
 
 
 @app.after_request

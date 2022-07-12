@@ -2,8 +2,9 @@ import click
 from mongoengine import DoesNotExist
 
 from speid import app
+from speid.backend_client import BackendClient
 from speid.models import Transaction
-from speid.types import Estado
+from speid.types import Estado, UpdateOrderType
 
 
 @app.cli.group('speid')
@@ -27,13 +28,15 @@ def set_status_transaction(speid_id, transaction_status):
         raise ValueError('Invalid event type')
     transaction.set_status(status)
     transaction.save()
+    update_order = UpdateOrderType(speid_id=transaction.speid_id, orden_id=transaction.stp_id, estado=status)
+    client = BackendClient()
+    client.update_order(update_order)
 
 
 @speid_group.command()
 @click.argument('speid_id', type=str)
 def re_execute_transactions(speid_id):
-    """Encola la transacción para intentar ser enviada
-    nuevamente"""
+    """Envía la transacción a STP"""
     try:
         transaction = Transaction.objects.get(speid_id=speid_id)
     except DoesNotExist:
