@@ -3,7 +3,7 @@ from unittest.mock import patch
 import pytest
 from celery import Celery
 
-from speid.models import Transaction, Event
+from speid.models import Event, Transaction
 from speid.types import Estado
 
 
@@ -167,7 +167,9 @@ def test_create_orden_duplicated(client, default_income_transaction):
 
 
 def test_create_orden_exception(client, default_income_transaction):
-    with patch('requests.Session.request', side_effect=Exception('Algo muy malo')):
+    with patch(
+        'requests.Session.request', side_effect=Exception('Algo muy malo')
+    ):
         resp = client.post('/ordenes', json=default_income_transaction)
         transaction = Transaction.objects.order_by('-created_at').first()
         assert transaction.estado is Estado.error

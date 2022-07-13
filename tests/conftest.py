@@ -1,9 +1,9 @@
 import datetime as dt
 from typing import Generator
 from unittest.mock import patch
-from requests import Response
 
 import pytest
+from requests import Response
 
 from speid.models import Transaction
 
@@ -14,6 +14,7 @@ def mock_backend():
         requestMock.return_value.json.return_value = dict(mocked=True)
         requestMock.return_value.ok = True
         yield
+
 
 @pytest.fixture(scope='module')
 def vcr_config():

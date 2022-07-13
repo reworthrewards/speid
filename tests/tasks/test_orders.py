@@ -2,10 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from speid.exc import (
-    MalformedOrderException,
-    ResendSuccessOrderException,
-)
+from speid.exc import MalformedOrderException, ResendSuccessOrderException
 from speid.models import Transaction
 from speid.tasks.orders import execute, retry_timeout, send_order
 from speid.types import Estado, EventType
@@ -81,9 +78,7 @@ def test_worker():
 
 
 @patch('speid.tasks.orders.capture_exception')
-def test_malformed_order_exception(
-    mock_capture_exception: MagicMock
-):
+def test_malformed_order_exception(mock_capture_exception: MagicMock):
     order = dict(
         concepto_pago='PRUEBA Version 2',
         institucion_ordenante='90646',

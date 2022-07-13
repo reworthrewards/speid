@@ -33,7 +33,8 @@ def test_set_status_transaction(mock_backend, transaction):
 
     runner = CliRunner()
     runner.invoke(
-        speid_group, ['set-status-transaction', str(transaction.speid_id), 'succeeded']
+        speid_group,
+        ['set-status-transaction', str(transaction.speid_id), 'succeeded'],
     )
 
     transaction = Transaction.objects.get(id=id_trx)
@@ -46,7 +47,8 @@ def test_set_status_failed_transaction(mock_backend, transaction):
 
     runner = CliRunner()
     runner.invoke(
-        speid_group, ['set-status-transaction', str(transaction.speid_id), 'failed']
+        speid_group,
+        ['set-status-transaction', str(transaction.speid_id), 'failed'],
     )
 
     transaction = Transaction.objects.get(id=id_trx)
@@ -59,7 +61,8 @@ def test_set_status_invalid_transaction(mock_backend, transaction):
 
     runner = CliRunner()
     result = runner.invoke(
-        speid_group, ['set-status-transaction', str(transaction.speid_id), 'invalid']
+        speid_group,
+        ['set-status-transaction', str(transaction.speid_id), 'invalid'],
     )
 
     transaction = Transaction.objects.get(id=id_trx)
@@ -82,9 +85,7 @@ def test_re_execute_transactions(runner, transaction):
     assert transaction.estado is Estado.submitted
 
 
-def test_re_execute_transaction_not_found(
-    runner, transaction
-):
+def test_re_execute_transaction_not_found(runner, transaction):
     id_trx = transaction.id
     assert transaction.estado is Estado.created
 
