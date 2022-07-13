@@ -7,6 +7,5 @@ flask-mongoengine==1.0.0
 luhnmod10==1.0.2
 mongoengine==0.23.1
 python-hosts==1.0.1
-pydantic==1.9.1
 sentry-sdk==1.7.0
 stpmex==3.9.1
