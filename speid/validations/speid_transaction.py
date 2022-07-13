@@ -22,7 +22,6 @@ class SpeidTransaction(BaseModel):
     clave_rastreo: Optional[str] = None
     tipo_pago: int = 1
     tipo_cuenta_ordenante: Optional[str] = None
-    tipo_cuenta_beneficiario: int = 40
     rfc_curp_beneficiario: str = "ND"
     email_beneficiario: Optional[str] = None
     tipo_cuenta_beneficiario2: Optional[str] = None

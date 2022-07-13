@@ -3,7 +3,7 @@ from click.testing import CliRunner
 
 from speid.commands.spei import speid_group
 from speid.models import Transaction
-from speid.types import Estado, EventType
+from speid.types import Estado
 
 
 @pytest.fixture

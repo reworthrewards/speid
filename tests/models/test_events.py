@@ -1,5 +1,4 @@
 from speid.models import Event, Transaction
-from speid.types import EventType
 
 
 def test_event():

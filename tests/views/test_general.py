@@ -1,7 +1,6 @@
 from unittest.mock import patch
 
 import pytest
-from celery import Celery
 
 from speid.models import Event, Transaction
 from speid.types import Estado

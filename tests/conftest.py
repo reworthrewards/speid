@@ -3,7 +3,6 @@ from typing import Generator
 from unittest.mock import patch
 
 import pytest
-from requests import Response
 
 from speid.models import Transaction
 

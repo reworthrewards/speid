@@ -5,7 +5,7 @@ import pytest
 from speid.exc import MalformedOrderException, ResendSuccessOrderException
 from speid.models import Transaction
 from speid.tasks.orders import execute, retry_timeout, send_order
-from speid.types import Estado, EventType
+from speid.types import Estado
 
 
 @pytest.mark.parametrize(
