@@ -1,10 +1,12 @@
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from requests import Session
 
 from speid.config import BACKEND_JWT_TOKEN, BACKEND_URL
 from speid.exc import BackendError
-from speid.validations import StpTransaction, UpdateSpeidTransaction
+
+if TYPE_CHECKING:
+    from speid.validations import StpTransaction, UpdateSpeidTransaction
 
 
 class BackendClient:
@@ -19,11 +21,11 @@ class BackendClient:
         self.session = Session()
         self.session.headers['Authorization'] = f'Bearer {BACKEND_JWT_TOKEN}'
 
-    def update_order(self, update_order: UpdateSpeidTransaction) -> None:
+    def update_order(self, update_order: 'UpdateSpeidTransaction') -> None:
         data = update_order.dict()
         self._request('POST', 'orden_events', data)
 
-    def receive_order(self, transaction: StpTransaction) -> None:
+    def receive_order(self, transaction: 'StpTransaction') -> None:
         data = transaction.dict()
         self._request('POST', 'ordenes', data)
 

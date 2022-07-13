@@ -3,13 +3,12 @@ from speid.types import EventType
 
 
 def test_event():
-    received = Event(type=EventType.received)
-    completed = Event(type=EventType.completed)
-    transaction = Transaction(events=[received, completed])
+    transaction = Transaction()
     transaction.save()
     id_trx = transaction.id
-    transaction = Transaction.objects.get(id=id_trx)
-    assert len(transaction.events) == 2
-    assert transaction.events[0].type == received.type
-    assert transaction.events[1].type == completed.type
     transaction.delete()
+
+    events = Event.objects(target_document_id=str(id_trx))
+    assert len(events) == 2
+    assert 'Created: ' in events[0].metadata
+    assert 'Deleted: ' in events[1].metadata

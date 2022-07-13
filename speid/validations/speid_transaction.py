@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel, StrictStr
+from pydantic import BaseModel, StrictStr, validator
 from stpmex.types import TipoCuenta
 
 from speid.models import Transaction
@@ -17,7 +17,6 @@ class SpeidTransaction(BaseModel):
     cuenta_ordenante: StrictStr
     rfc_curp_ordenante: StrictStr
     speid_id: StrictStr
-    version: str
     empresa: Optional[str] = None
     folio_origen: Optional[str] = None
     clave_rastreo: Optional[str] = None
@@ -47,14 +46,20 @@ class SpeidTransaction(BaseModel):
             k: v for k, v in self.__dict__.items() if not k.startswith('_')
         }
 
-    def __post_init__(self):
+    @property
+    def tipo_cuenta_beneficiario(self):
         cuenta_len = len(self.cuenta_beneficiario)
         if cuenta_len == 18:
-            self.tipo_cuenta_beneficiario = TipoCuenta.clabe.value
+            return TipoCuenta.clabe.value
         elif cuenta_len in {15, 16}:
-            self.tipo_cuenta_beneficiario = TipoCuenta.card.value
-        else:
+            return TipoCuenta.card.value
+
+    @validator('cuenta_beneficiario')
+    def validate_cuenta_beneficiario(cls, cuenta_beneficiario):
+        cuenta_len = len(cuenta_beneficiario)
+        if cuenta_len not in [18, 15, 16]:
             raise ValueError(f'{cuenta_len} is not a valid cuenta length')
+        return cuenta_beneficiario
 
     def transform(self) -> Transaction:
         transaction = Transaction(**self.to_dict())

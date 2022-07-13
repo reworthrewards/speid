@@ -24,13 +24,6 @@ def test_transaction():
         rfc_curp_ordenante='ND',
         speid_id='speid_id',
     )
-    transaction.events.append(Event(type=EventType.created))
-    transaction.events.append(Event(type=EventType.received))
-    transaction.events.append(Event(type=EventType.retry))
-    transaction.events.append(Event(type=EventType.retry))
-    transaction.events.append(Event(type=EventType.error))
-    transaction.events.append(Event(type=EventType.completed))
-
     transaction.save()
     trx_saved = Transaction.objects.get(id=transaction.id)
     assert transaction.concepto_pago == trx_saved.concepto_pago
@@ -47,7 +40,6 @@ def test_transaction():
     assert transaction.cuenta_ordenante == trx_saved.cuenta_ordenante
     assert transaction.rfc_curp_ordenante == trx_saved.rfc_curp_ordenante
     assert transaction.speid_id == trx_saved.speid_id
-    assert len(trx_saved.events) == 6
     transaction.delete()
 
 
@@ -149,7 +141,6 @@ def test_transaction_speid_input():
         cuenta_ordenante='646180157000000004',
         rfc_curp_ordenante='ND',
         speid_id='speid_id',
-        version=1,
     )
     input = SpeidTransaction(**order)
     transaction = input.transform()
@@ -173,7 +164,6 @@ def test_transaction_speid_input_validation_error():
         cuenta_ordenante='646180157000000004',
         rfc_curp_ordenante='ND',
         speid_id='speid_id',
-        version=1,
     )
     with pytest.raises(ValidationError):
         SpeidTransaction(**order)
@@ -191,7 +181,6 @@ def test_transaction_speid_clabe_cuenta_beneficiario():
         cuenta_ordenante='646180157000000004',
         rfc_curp_ordenante='ND',
         speid_id='speid_id',
-        version=1,
     )
     input = SpeidTransaction(**order)
     assert input.tipo_cuenta_beneficiario is TipoCuenta.clabe.value
@@ -209,7 +198,6 @@ def test_transaction_speid_card_cuenta_beneficiario():
         cuenta_ordenante='646180157000000004',
         rfc_curp_ordenante='ND',
         speid_id='speid_id',
-        version=1,
     )
     input = SpeidTransaction(**order)
     assert input.tipo_cuenta_beneficiario is TipoCuenta.card.value
@@ -227,14 +215,13 @@ def test_transaction_speid_non_valid_cuenta_beneficiario():
         cuenta_ordenante='646180157000000004',
         rfc_curp_ordenante='ND',
         speid_id='speid_id',
-        version=1,
     )
     with pytest.raises(ValueError):
         SpeidTransaction(**order)
 
 
 @pytest.mark.vcr
-def test_send_order(physical_account):
+def test_send_order():
     transaction = Transaction(
         concepto_pago='PRUEBA',
         institucion_ordenante='90646',
@@ -268,28 +255,4 @@ def test_send_order(physical_account):
     order = transaction.create_order()
     assert transaction.stp_id == order.id
 
-    transaction.delete()
-
-
-def test_fail_send_order_no_account_registered():
-    transaction = Transaction(
-        concepto_pago='PRUEBA',
-        institucion_ordenante='90646',
-        cuenta_beneficiario='072691004495711499',
-        institucion_beneficiaria='40072',
-        monto=1020,
-        nombre_beneficiario='Ricardo Sánchez Castillo de la Mancha S.A. de CV',
-        nombre_ordenante='   Ricardo Sánchez Castillo de la Mancha S.A. de CV',
-        cuenta_ordenante='646180157000000004',
-        rfc_curp_ordenante='ND',
-        speid_id='speid_id',
-        tipo_cuenta_beneficiario=40,
-    )
-    transaction_id = transaction.save().id
-
-    with pytest.raises(MalformedOrderException):
-        transaction.create_order()
-
-    transaction = Transaction.objects.get(id=transaction_id)
-    assert transaction.estado is Estado.error
     transaction.delete()

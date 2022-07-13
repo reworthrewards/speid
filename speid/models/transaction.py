@@ -135,7 +135,7 @@ class Transaction(Document):
             )
         except (Exception) as e:  # Anything can happen here
             self.save()
-            Event(target_document_id=self.pk, metadata=str(e)).save()
+            Event(target_document_id=str(self.id), metadata=str(e)).save()
             raise e
         else:
             self.clave_rastreo = self.clave_rastreo or order.claveRastreo

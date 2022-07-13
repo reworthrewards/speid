@@ -1,22 +1,19 @@
 import datetime as dt
-import os
 from typing import Generator
 from unittest.mock import patch
+from requests import Response
 
 import pytest
-from celery import Celery
 
 from speid.models import Transaction
 
-SEND_TRANSACTION_TASK = os.environ['SEND_TRANSACTION_TASK']
-SEND_STATUS_TRANSACTION_TASK = os.environ['SEND_STATUS_TRANSACTION_TASK']
-
 
 @pytest.fixture
-def mock_callback_queue():
-    with patch.object(Celery, 'send_task', return_value=None):
+def mock_backend():
+    with patch('requests.Session.request') as requestMock:
+        requestMock.return_value.json.return_value = dict(mocked=True)
+        requestMock.return_value.ok = True
         yield
-
 
 @pytest.fixture(scope='module')
 def vcr_config():
@@ -40,59 +37,10 @@ def outcome_transaction() -> Generator[Transaction, None, None]:
         cuenta_ordenante='646180157000000004',
         rfc_curp_ordenante='ND',
         speid_id='go' + dt.datetime.now().strftime('%m%d%H%M%S'),
-        version=1,
     )
     transaction.save()
     yield transaction
     transaction.delete()
-
-
-@pytest.fixture
-def physical_account():
-    # Pongo los import aquí porque de otra forma no puedo hacer tests del
-    # __init__ sin que se haya importado ya. Y así no repito el mismo fixture
-    # en todos los lugares donde se usa
-    from speid.models import PhysicalAccount
-    from speid.types import Estado
-
-    account = PhysicalAccount(
-        estado=Estado.succeeded,
-        nombre='Ricardo',
-        apellido_paterno='Sánchez',
-        cuenta='646180157000000004',
-        rfc_curp='SACR891125HDFABC01',
-        telefono='5567890123',
-        fecha_nacimiento=dt.date(1989, 11, 25),
-        pais_nacimiento='MX',
-    )
-    account.save()
-
-    yield account
-
-    account.delete()
-
-
-@pytest.fixture
-def moral_account():
-    # Pongo los import aquí porque de otra forma no puedo hacer tests del
-    # __init__ sin que se haya importado ya. Y así no repito el mismo fixture
-    # en todos los lugares donde se usa
-    from speid.models import MoralAccount
-    from speid.types import Estado
-
-    account = MoralAccount(
-        estado=Estado.succeeded,
-        nombre='Tarjetas Cuenca',
-        cuenta='646180157000000004',
-        rfc_curp='SACR891125HDFABC01',
-        fecha_constitucion=dt.date(1989, 11, 25),
-        pais='MX',
-    )
-    account.save()
-
-    yield account
-
-    account.delete()
 
 
 @pytest.fixture

@@ -51,7 +51,7 @@ def create_orden_events():
 def create_orden():
     transaction = Transaction()
     try:
-        external_tx = StpTransaction(request.json)  # type: ignore
+        external_tx = StpTransaction(**request.json)  # type: ignore
         transaction = external_tx.transform()
         transaction.estado = Estado.succeeded
         transaction.save()
@@ -64,10 +64,10 @@ def create_orden():
     except Exception as e:
         response = dict(estado='LIQUIDACION')
         transaction.estado = Estado.error
-        Event(target_document_id=transaction.pk, metadata=str(e)).save()
+        Event(target_document_id=str(transaction.id), metadata=str(e)).save()
         transaction.save()
         capture_exception(e)
-    return response
+    return 201, response
 
 
 @post('/registra')

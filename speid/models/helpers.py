@@ -71,11 +71,11 @@ def updated_at(_, document):
     document.updated_at = datetime.utcnow()
 
 
-@handler(signals.pre_save)
-def save_events(_, document):
-    Event(target_document_id=document.id, metadata=str(document)).save()
+@handler(signals.post_save)
+def save_events(_, document, **kwargs):
+    Event(target_document_id=str(document.id), metadata=f'Created: {str(document.to_json())}').save()
 
 
 @handler(signals.pre_delete)
 def delete_events(_, document):
-    Event(target_document_id=document.id, metadata=str(document)).save()
+    Event(target_document_id=str(document.id), metadata=f'Deleted: {str(document.to_json())}').save()

@@ -41,7 +41,7 @@ def execute(order_values: dict):
         ):
             raise MalformedOrderException()
     except (MalformedOrderException, TypeError, ValueError):
-        transaction.set_state(Estado.error)
+        transaction.set_status(Estado.error)
         transaction.save()
         raise MalformedOrderException()
 
