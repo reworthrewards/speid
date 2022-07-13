@@ -6,7 +6,7 @@ Flask==2.0.3
 flask-mongoengine==1.0.0
 luhnmod10==1.0.2
 mongoengine==0.23.1
-newrelic==6.2.0.156
+newrelic==7.14.0.177
 pandas==1.2.4
 python-hosts==1.0.1
 sentry-sdk==0.19.5
