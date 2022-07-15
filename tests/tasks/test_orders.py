@@ -40,9 +40,9 @@ def test_malformed_order_worker(mock_backend):
 def test_create_order_debit_card():
     order = dict(
         concepto_pago='DebitCardTest',
-        institucion_ordenante='90646',
+        institucion_operante='90646',
         cuenta_beneficiario='4242424242424242',
-        institucion_beneficiaria='40072',
+        institucion_contraparte='40072',
         monto=1020,
         nombre_beneficiario='Pach',
         nombre_ordenante='BANCO',
@@ -61,9 +61,9 @@ def test_create_order_debit_card():
 def test_worker():
     order = dict(
         concepto_pago='PRUEBA Version 2',
-        institucion_ordenante='90646',
+        institucion_operante='90646',
         cuenta_beneficiario='072691004495711499',
-        institucion_beneficiaria='40072',
+        institucion_contraparte='40072',
         monto=1020,
         nombre_beneficiario='Pablo Sánchez',
         nombre_ordenante='BANCO',
@@ -81,9 +81,9 @@ def test_worker():
 def test_malformed_order_exception(mock_capture_exception: MagicMock):
     order = dict(
         concepto_pago='PRUEBA Version 2',
-        institucion_ordenante='90646',
+        institucion_operante='90646',
         cuenta_beneficiario='123456789012345678',
-        institucion_beneficiaria='40072',
+        institucion_contraparte='40072',
         monto=1020,
         nombre_beneficiario='Pablo Sánchez',
         nombre_ordenante='BANCO',
@@ -128,9 +128,9 @@ def test_retry_on_unexpected_exception(
 def test_resend_success_order():
     order = dict(
         concepto_pago='PRUEBA Version 2',
-        institucion_ordenante='90646',
+        institucion_operante='90646',
         cuenta_beneficiario='072691004495711499',
-        institucion_beneficiaria='40072',
+        institucion_contraparte='40072',
         monto=1020,
         nombre_beneficiario='Pablo Sánchez',
         nombre_ordenante='BANCO',

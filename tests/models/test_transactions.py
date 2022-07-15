@@ -76,30 +76,30 @@ def test_transaction_constraints():
 
 def test_transaction_stp_input():
     data = dict(
-        Clave=2456304,
-        FechaOperacion=20180618,
-        InstitucionOrdenante=40012,
-        InstitucionBeneficiaria=90646,
-        ClaveRastreo="PRUEBATAMIZI1",
-        Monto=100.0,
-        NombreOrdenante="BANCO",
-        TipoCuentaOrdenante=40,
-        CuentaOrdenante="846180000500000008",
-        RFCCurpOrdenante="ND",
-        NombreBeneficiario="TAMIZI",
-        TipoCuentaBeneficiario=40,
-        CuentaBeneficiario="646180157000000004",
-        RFCCurpBeneficiario="ND",
-        ConceptoPago="PRUEBA",
-        ReferenciaNumerica=2423,
-        Empresa="TAMIZI",
+        id=2456304,
+        fechaOperacion=20180618,
+        institucionOrdenante=40012,
+        institucionBeneficiaria=90646,
+        claveRastreo="PRUEBATAMIZI1",
+        monto=100.0,
+        nombreOrdenante="BANCO",
+        tipoCuentaOrdenante=40,
+        cuentaOrdenante="846180000500000008",
+        rfcCurpOrdenante="ND",
+        nombreBeneficiario="TAMIZI",
+        tipoCuentaBeneficiario=40,
+        cuentaBeneficiario="646180157000000004",
+        rfcCurpBeneficiario="ND",
+        conceptoPago="PRUEBA",
+        referenciaNumerica=2423,
+        empresa="TAMIZI",
     )
     input = StpTransaction(**data)
     transaction = input.transform()
     transaction.save()
     trx_saved = Transaction.objects.get(id=transaction.id)
-    assert trx_saved.stp_id == input.Clave
-    assert trx_saved.monto == input.Monto * 100
+    assert trx_saved.stp_id == input.id
+    assert trx_saved.monto == input.monto * 100
     assert trx_saved.speid_id is not None
     transaction.delete()
 
@@ -131,9 +131,9 @@ def test_transaction_stp_input_value_error():
 def test_transaction_speid_input():
     order = dict(
         concepto_pago='PRUEBA',
-        institucion_ordenante='646',
+        institucion_operante='646',
         cuenta_beneficiario='072691004495711499',
-        institucion_beneficiaria='072',
+        institucion_contraparte='072',
         monto=1020,
         nombre_beneficiario='Ricardo Sánchez',
         nombre_ordenante='BANCO',
@@ -171,9 +171,9 @@ def test_transaction_speid_input_validation_error():
 def test_transaction_speid_clabe_cuenta_beneficiario():
     order = dict(
         concepto_pago='PRUEBA',
-        institucion_ordenante='646',
+        institucion_operante='646',
         cuenta_beneficiario='072691004495711499',
-        institucion_beneficiaria='072',
+        institucion_contraparte='072',
         monto=1020,
         nombre_beneficiario='Ricardo Sánchez',
         nombre_ordenante='BANCO',
@@ -188,9 +188,9 @@ def test_transaction_speid_clabe_cuenta_beneficiario():
 def test_transaction_speid_card_cuenta_beneficiario():
     order = dict(
         concepto_pago='PRUEBA',
-        institucion_ordenante='646',
+        institucion_operante='646',
         cuenta_beneficiario='5439240312453006',
-        institucion_beneficiaria='072',
+        institucion_contraparte='072',
         monto=1020,
         nombre_beneficiario='Ricardo Sánchez',
         nombre_ordenante='BANCO',
@@ -205,9 +205,9 @@ def test_transaction_speid_card_cuenta_beneficiario():
 def test_transaction_speid_non_valid_cuenta_beneficiario():
     order = dict(
         concepto_pago='PRUEBA',
-        institucion_ordenante='646',
+        institucion_operante='646',
         cuenta_beneficiario='12345',
-        institucion_beneficiaria='072',
+        institucion_contraparte='072',
         monto=1020,
         nombre_beneficiario='Ricardo Sánchez',
         nombre_ordenante='BANCO',

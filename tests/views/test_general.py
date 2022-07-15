@@ -154,7 +154,7 @@ def test_create_orden_duplicated(client, default_income_transaction):
     default_income_transaction['Clave'] = 2456304
     resp = client.post('/ordenes', json=default_income_transaction)
     transactions = Transaction.objects(
-        clave_rastreo=default_income_transaction['ClaveRastreo']
+        clave_rastreo=default_income_transaction['abono']['claveRastreo']
     ).order_by('-created_at')
     assert len(transactions) == 1
     assert transactions[0].stp_id == 2456303
@@ -180,23 +180,25 @@ def test_create_orden_exception(client, default_income_transaction):
 @pytest.mark.usefixtures('mock_backend')
 def test_create_orden_without_ordenante(client):
     data = dict(
-        Clave=123123233,
-        FechaOperacion=20190129,
-        InstitucionOrdenante=40102,
-        InstitucionBeneficiaria=90646,
-        ClaveRastreo='MANU-00000295251',
-        Monto=1000,
-        NombreOrdenante='null',
-        TipoCuentaOrdenante=0,
-        CuentaOrdenante='null',
-        RFCCurpOrdenante='null',
-        NombreBeneficiario='JESUS ADOLFO ORTEGA TURRUBIATES',
-        TipoCuentaBeneficiario=40,
-        CuentaBeneficiario='646180157020812599',
-        RFCCurpBeneficiario='ND',
-        ConceptoPago='FONDEO',
-        ReferenciaNumerica=1232134,
-        Empresa='TAMIZI',
+        abono=dict(
+            id=123123233,
+            fechaOperacion=20190129,
+            institucionOrdenante=40102,
+            institucionBeneficiaria=90646,
+            claveRastreo='MANU-00000295251',
+            monto=1000,
+            nombreOrdenante='null',
+            tipoCuentaOrdenante=0,
+            cuentaOrdenante='null',
+            rfcCurpOrdenante='null',
+            nombreBeneficiario='JESUS ADOLFO ORTEGA TURRUBIATES',
+            tipoCuentaBeneficiario=40,
+            cuentaBeneficiario='646180157020812599',
+            rfcCurpBeneficiario='ND',
+            conceptoPago='FONDEO',
+            referenciaNumerica=1232134,
+            empresa='TAMIZI',
+        )
     )
     resp = client.post('/ordenes', json=data)
     transaction = Transaction.objects.order_by('-created_at').first()

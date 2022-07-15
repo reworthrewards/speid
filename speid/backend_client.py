@@ -11,7 +11,7 @@ from speid.config import (
 from speid.exc import BackendError
 
 if TYPE_CHECKING:
-    from speid.validations import StpTransaction, UpdateSpeidTransaction
+    from speid.validations import UpdateSpeidTransaction
 
 
 class BackendClient:

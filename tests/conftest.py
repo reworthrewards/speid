@@ -37,6 +37,7 @@ def outcome_transaction() -> Generator[Transaction, None, None]:
         cuenta_ordenante='646180157000000004',
         rfc_curp_ordenante='ND',
         speid_id='go' + dt.datetime.now().strftime('%m%d%H%M%S'),
+        empresa='someEmpresa',
     )
     transaction.save()
     yield transaction
