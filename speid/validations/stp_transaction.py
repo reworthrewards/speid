@@ -8,23 +8,23 @@ from speid.models.helpers import base62_uuid, camel_to_snake
 
 
 class StpTransaction(BaseModel):
-    FechaOperacion: int
-    InstitucionOrdenante: str
-    InstitucionBeneficiaria: str
-    ClaveRastreo: StrictStr
-    Monto: float
-    NombreOrdenante: StrictStr
-    TipoCuentaOrdenante: int
-    CuentaOrdenante: StrictStr
-    RFCCurpOrdenante: StrictStr
-    NombreBeneficiario: StrictStr
-    TipoCuentaBeneficiario: int
-    CuentaBeneficiario: StrictStr
-    RFCCurpBeneficiario: StrictStr
-    ConceptoPago: StrictStr
-    ReferenciaNumerica: int
-    Empresa: StrictStr
-    Clave: Optional[int] = None
+    fechaOperacion: int
+    institucionOrdenante: str
+    institucionBeneficiaria: str
+    claveRastreo: StrictStr
+    monto: float
+    nombreOrdenante: StrictStr
+    tipoCuentaOrdenante: int
+    cuentaOrdenante: StrictStr
+    rfcCurpOrdenante: StrictStr
+    nombreBeneficiario: StrictStr
+    tipoCuentaBeneficiario: int
+    cuentaBeneficiario: StrictStr
+    rfcCurpBeneficiario: StrictStr
+    conceptoPago: StrictStr
+    referenciaNumerica: int
+    empresa: StrictStr
+    id: Optional[int] = None
 
     def transform(self) -> Transaction:
         trans_dict = {
@@ -32,7 +32,7 @@ class StpTransaction(BaseModel):
             for k, v in self.__dict__.items()
             if not k.startswith('_')
         }
-        trans_dict['stp_id'] = trans_dict.pop('clave', None)
+        trans_dict['stp_id'] = trans_dict.pop('id', None)
         trans_dict['monto'] = round(trans_dict['monto'] * 100)
         transaction = Transaction(**trans_dict)
         transaction.speid_id = base62_uuid('SR')()

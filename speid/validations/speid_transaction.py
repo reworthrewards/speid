@@ -1,16 +1,17 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from pydantic import BaseModel, StrictStr, validator
 from stpmex.types import TipoCuenta
 
 from speid.models import Transaction
+from speid.models.helpers import camel_to_snake
 
 
 class SpeidTransaction(BaseModel):
     concepto_pago: StrictStr
-    institucion_ordenante: StrictStr
+    institucion_operante: StrictStr
     cuenta_beneficiario: StrictStr
-    institucion_beneficiaria: StrictStr
+    institucion_contraparte: StrictStr
     monto: int
     nombre_beneficiario: StrictStr
     nombre_ordenante: StrictStr
@@ -45,6 +46,13 @@ class SpeidTransaction(BaseModel):
             k: v for k, v in self.__dict__.items() if not k.startswith('_')
         }
 
+    @classmethod
+    def from_camel_case(cls, values: Dict):
+        snake_values = {camel_to_snake(k): v for k, v in values.items()}
+        float_amount = float(snake_values['monto'])
+        snake_values['monto'] = int(float_amount * 100)
+        return cls(**snake_values)
+
     @property
     def tipo_cuenta_beneficiario(self):
         cuenta_len = len(self.cuenta_beneficiario)
@@ -61,5 +69,10 @@ class SpeidTransaction(BaseModel):
         return cuenta_beneficiario
 
     def transform(self) -> Transaction:
-        transaction = Transaction(**self.to_dict())
+        values = self.to_dict()
+        values['institucion_beneficiaria'] = values['institucion_contraparte']
+        values['institucion_ordenante'] = values['institucion_operante']
+        del values['institucion_contraparte']
+        del values['institucion_operante']
+        transaction = Transaction(**values)
         return transaction

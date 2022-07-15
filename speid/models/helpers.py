@@ -75,7 +75,7 @@ def updated_at(_, document):
 def save_events(_, document, **kwargs):
     Event(
         target_document_id=str(document.id),
-        metadata=f'Created: {str(document.to_json())}',
+        metadata=f'Saved: {str(document.to_json())}',
     ).save()
 
 

@@ -33,7 +33,7 @@ def send_order(self, order_values: dict):
 def execute(order_values: dict):
     transaction = Transaction()
     try:
-        speid_transaction = SpeidTransaction(**order_values)
+        speid_transaction = SpeidTransaction.from_camel_case(order_values)
         transaction = speid_transaction.transform()
 
         if not clabe.validate_clabe(transaction.cuenta_beneficiario) and (

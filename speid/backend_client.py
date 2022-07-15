@@ -2,7 +2,12 @@ from typing import TYPE_CHECKING, Any, Dict
 
 from requests import Session
 
-from speid.config import BACKEND_JWT_TOKEN, BACKEND_URL
+from speid.config import (
+    BACKEND_JWT_TOKEN,
+    BACKEND_URL,
+    CREATE_ORDER_URL,
+    UPDATE_ORDER_URL,
+)
 from speid.exc import BackendError
 
 if TYPE_CHECKING:
@@ -23,11 +28,10 @@ class BackendClient:
 
     def update_order(self, update_order: 'UpdateSpeidTransaction') -> None:
         data = update_order.dict()
-        self._request('POST', 'orden_events', data)
+        self._request('POST', UPDATE_ORDER_URL, data)
 
-    def receive_order(self, transaction: 'StpTransaction') -> None:
-        data = transaction.dict()
-        self._request('POST', 'ordenes', data)
+    def receive_order(self, transaction: Dict[str, Any]) -> None:
+        self._request('POST', CREATE_ORDER_URL, transaction)
 
     def _request(
         self, method: str, endpoint: str, data: Dict[str, Any]

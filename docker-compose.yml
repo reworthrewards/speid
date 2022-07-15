@@ -3,12 +3,16 @@ version: '3'
 services:
   db:
     image: mongo
+    ports:
+      - "27017:27017"
 
   rabbitmq:
     image: rabbitmq
 
   speid:
     build: .
+    ports:
+      - "80:80"
     volumes:
       - .:/speid
     links:

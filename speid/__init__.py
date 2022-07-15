@@ -56,6 +56,7 @@ def configure_environment():
 # Configura sentry
 sentry_sdk.init(
     dsn=os.environ['SENTRY_DSN'],
+    environment=os.environ['SENTRY_ENVIRONMENT'],
     integrations=[FlaskIntegration(), CeleryIntegration()],
 )
 

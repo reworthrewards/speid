@@ -4,6 +4,6 @@ from speid.types import Estado
 
 
 class UpdateSpeidTransaction(BaseModel):
-    speid_id: str
-    orden_id: str
+    id: str
+    empresa: str
     estado: Estado
