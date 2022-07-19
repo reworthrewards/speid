@@ -1,7 +1,7 @@
 black==22.3.0
 flake8==3.8.*
 isort[requirements]==5.7.*
-mongomock==3.22.*
+mongomock==4.1.*
 moto==3.1.16
 mypy==0.961
 pytest==7.1.*
