@@ -10,7 +10,7 @@ from mongoengine import (
 )
 from stpmex.resources import Orden
 
-from speid import STP_EMPRESA
+from speid.config import STP_EMPRESA
 from speid.processors import stpmex_client
 from speid.types import Estado
 
