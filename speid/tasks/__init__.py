@@ -27,7 +27,7 @@ def make_celery(app: Flask) -> Celery:
 app.config['CELERY_BROKER_URL'] = AMPQ_ADDRESS
 app.config['BROKER_TRANSPORT_OPTIONS'] = {
     'region': CELERY_REGION,
-    'queue_name_prefix': CELERY_NAME_PREFIX
+    'queue_name_prefix': CELERY_NAME_PREFIX,
 }
 
 celery = make_celery(app)
