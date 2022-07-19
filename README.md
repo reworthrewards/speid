@@ -1,19 +1,15 @@
 ## stpProxy
 
-[![Test](https://github.com/cuenca-mx/speid/workflows/Test/badge.svg)](https://github.com/cuenca-mx/speid/actions?query=workflow%3ATest)
-[![codecov](https://codecov.io/gh/cuenca-mx/speid/branch/master/graph/badge.svg)](https://codecov.io/gh/cuenca-mx/speid)
-[![](https://images.microbadger.com/badges/image/cuenca/speid:1.9.4.svg)](https://microbadger.com/images/cuenca/speid:1.9.4 "Get your own image badge on microbadger.com")
-[![](https://images.microbadger.com/badges/version/cuenca/speid:1.9.4.svg)](https://microbadger.com/images/cuenca/speid:1.9.4 "Get your own version badge on microbadger.com")
+[![Docker Image CI](https://github.com/reworthrewards/speid/actions/workflows/docker-image.yml/badge.svg)](https://github.com/reworthrewards/speid/actions/workflows/docker-image.yml)
+[![Test](https://github.com/reworthrewards/speid/actions/workflows/test.yml/badge.svg)](https://github.com/reworthrewards/speid/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/reworthrewards/speid/branch/main/graph/badge.svg?token=0BmgZw3rL6)](https://codecov.io/gh/reworthrewards/speid)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 
-**
-Este es un Fork de (cuenca-mx/speid)[https://github.com/cuenca-mx/speid] (Gracias!).
-Se realizan ajustes para mantener estas premisas:
+**Este es un Fork de [cuenca-mx/speid](https://github.com/cuenca-mx/speid) (Gracias!).
+Se realizan ajustes para mantener estas premisas:**
 
 - Hacerlo agnóstico a la plataforma donde será desplegado (Se quita lo relacionado a Aptible y NewRelic)
 - Hacerlo agnóstico al lenguaje de programación del backend con el que se comunique (Se usa Celery solo internamente)
-
-**
 
 Una forma robusta de comunicarse con STP, utilizando la librería 
 [stpmex](https://pypi.org/project/stpmex/) para el manejo de transferencias eléctronicas. Hay dos puntos importantes:
@@ -23,7 +19,7 @@ Una forma robusta de comunicarse con STP, utilizando la librería
 después lo intentará cada 20 minutos hasta que haya un total de 12 intentos.
 Después de los 12 intentos la orden puede volver a ser enviada manualmente usando este comando:
 ```python
-TODO comando
+flask speid re-execute-transaction ${SPEID_ID}
 ```
 Por otro lado, cuando la orden es enviada con éxito, se recibe la respuesta de STP en `POST /orden_events` 
 para hacer el llamado al mismo endpoint en el backend y confirmar o cancelar la orden.
