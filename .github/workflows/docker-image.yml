@@ -24,4 +24,4 @@ jobs:
         context: .
         file: ./Dockerfile
         push: true
-        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/speid:${{github.ref_name}}
+        tags: reworthrewards/speid:${{github.ref_name}}
