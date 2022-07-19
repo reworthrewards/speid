@@ -2,6 +2,8 @@ import os
 
 from stpmex import Client
 
+from speid.backend_client import BackendClient
+
 STP_PRIVATE_LOCATION = os.environ['STP_PRIVATE_LOCATION']
 STP_EMPRESA = os.environ['STP_EMPRESA']
 STP_KEY_PASSPHRASE = os.environ['STP_KEY_PASSPHRASE']
@@ -21,3 +23,6 @@ stpmex_client = Client(
     demo=SPEID_ENV != 'prod',
     base_url=STP_BASE_URL,
 )
+
+# Cliente para el backend
+backend_client = BackendClient()

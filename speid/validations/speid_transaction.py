@@ -1,31 +1,28 @@
-from typing import Optional
+from typing import Dict, Optional
 
-from pydantic import StrictStr
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel, StrictStr, validator
 from stpmex.types import TipoCuenta
 
 from speid.models import Transaction
+from speid.models.helpers import camel_to_snake
 
 
-@dataclass
-class SpeidTransaction:
+class SpeidTransaction(BaseModel):
     concepto_pago: StrictStr
-    institucion_ordenante: StrictStr
+    institucion_operante: StrictStr
     cuenta_beneficiario: StrictStr
-    institucion_beneficiaria: StrictStr
+    institucion_contraparte: StrictStr
     monto: int
     nombre_beneficiario: StrictStr
     nombre_ordenante: StrictStr
     cuenta_ordenante: StrictStr
     rfc_curp_ordenante: StrictStr
     speid_id: StrictStr
-    version: str
     empresa: Optional[str] = None
     folio_origen: Optional[str] = None
     clave_rastreo: Optional[str] = None
     tipo_pago: int = 1
     tipo_cuenta_ordenante: Optional[str] = None
-    tipo_cuenta_beneficiario: int = 40
     rfc_curp_beneficiario: str = "ND"
     email_beneficiario: Optional[str] = None
     tipo_cuenta_beneficiario2: Optional[str] = None
@@ -49,15 +46,33 @@ class SpeidTransaction:
             k: v for k, v in self.__dict__.items() if not k.startswith('_')
         }
 
-    def __post_init__(self):
+    @classmethod
+    def from_camel_case(cls, values: Dict):
+        snake_values = {camel_to_snake(k): v for k, v in values.items()}
+        float_amount = float(snake_values['monto'])
+        snake_values['monto'] = int(float_amount * 100)
+        return cls(**snake_values)
+
+    @property
+    def tipo_cuenta_beneficiario(self):
         cuenta_len = len(self.cuenta_beneficiario)
         if cuenta_len == 18:
-            self.tipo_cuenta_beneficiario = TipoCuenta.clabe.value
+            return TipoCuenta.clabe.value
         elif cuenta_len in {15, 16}:
-            self.tipo_cuenta_beneficiario = TipoCuenta.card.value
-        else:
+            return TipoCuenta.card.value
+
+    @validator('cuenta_beneficiario')
+    def validate_cuenta_beneficiario(cls, cuenta_beneficiario):
+        cuenta_len = len(cuenta_beneficiario)
+        if cuenta_len not in [18, 15, 16]:
             raise ValueError(f'{cuenta_len} is not a valid cuenta length')
+        return cuenta_beneficiario
 
     def transform(self) -> Transaction:
-        transaction = Transaction(**self.to_dict())
+        values = self.to_dict()
+        values['institucion_beneficiaria'] = values['institucion_contraparte']
+        values['institucion_ordenante'] = values['institucion_operante']
+        del values['institucion_contraparte']
+        del values['institucion_operante']
+        transaction = Transaction(**values)
         return transaction

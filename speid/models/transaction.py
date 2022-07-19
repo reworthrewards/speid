@@ -1,40 +1,21 @@
-import os
 from datetime import datetime
-from enum import Enum
 
 from mongoengine import (
     DateTimeField,
     Document,
-    DoesNotExist,
+    EnumField,
     IntField,
-    ListField,
-    ReferenceField,
     StringField,
     signals,
 )
 from stpmex.resources import Orden
 
 from speid import STP_EMPRESA
-from speid.exc import MalformedOrderException
-from speid.helpers import callback_helper
 from speid.processors import stpmex_client
-from speid.types import Estado, EventType
+from speid.types import Estado
 
-from .account import Account
-from .base import BaseModel
 from .events import Event
-from .helpers import (
-    EnumField,
-    date_now,
-    delete_events,
-    handler,
-    save_events,
-    updated_at,
-)
-
-SKIP_VALIDATION_PRIOR_SEND_ORDER = (
-    os.getenv('SKIP_VALIDATION_PRIOR_SEND_ORDER', 'false').lower() == 'true'
-)
+from .helpers import date_now, delete_events, handler, save_events, updated_at
 
 
 @handler(signals.pre_save)
@@ -45,15 +26,11 @@ def pre_save_transaction(sender, document):
     )
 
 
-# Min amount accepted in restricted accounts
-MIN_AMOUNT = 100_00
-
-
 @updated_at.apply
 @save_events.apply
 @pre_save_transaction.apply
 @delete_events.apply
-class Transaction(Document, BaseModel):
+class Transaction(Document):
     created_at = date_now()
     updated_at = DateTimeField()
     stp_id = IntField()
@@ -73,8 +50,7 @@ class Transaction(Document, BaseModel):
     concepto_pago = StringField()
     referencia_numerica = IntField()
     empresa = StringField()
-    estado: Enum = EnumField(Estado, default=Estado.created)
-    version = IntField()
+    estado = EnumField(Estado, default=Estado.created)
     speid_id = StringField()
     folio_origen = StringField()
     tipo_pago = IntField()
@@ -99,8 +75,6 @@ class Transaction(Document, BaseModel):
     curp_ordenante = StringField()
     rfc_ordenante = StringField()
 
-    events = ListField(ReferenceField(Event))
-
     meta = {
         'indexes': [
             '+stp_id',
@@ -112,52 +86,10 @@ class Transaction(Document, BaseModel):
         ]
     }
 
-    def set_state(self, state: Estado):
-        from ..tasks.transactions import send_transaction_status
-
-        send_transaction_status.apply_async((str(self.id), state))
-        self.estado = state
-
-        self.events.append(Event(type=EventType.completed))
-
-    def confirm_callback_transaction(self):
-        response = ''
-        self.events.append(Event(type=EventType.created))
-        self.save()
-        callback_helper.send_transaction(self.to_dict())
-
-        self.events.append(
-            Event(type=EventType.completed, metadata=str(response))
-        )
-
-    def is_valid_account(self) -> bool:
-        is_valid = True
-        try:
-            account = Account.objects.get(cuenta=self.cuenta_beneficiario)
-            if account.is_restricted:
-                ordenante = self.rfc_curp_ordenante
-                is_valid = (
-                    ordenante == account.allowed_rfc
-                    or ordenante == account.allowed_curp
-                ) and self.monto >= MIN_AMOUNT
-        except DoesNotExist:
-            pass
-        return is_valid
+    def set_status(self, status: Estado):
+        self.estado = status
 
     def create_order(self) -> Orden:
-        # Validate account has already been created
-        if not SKIP_VALIDATION_PRIOR_SEND_ORDER:
-            try:
-                account = Account.objects.get(cuenta=self.cuenta_ordenante)
-                assert account.estado is Estado.succeeded
-            except (DoesNotExist, AssertionError):
-                self.estado = Estado.error
-                self.save()
-                raise MalformedOrderException(
-                    f'Account has not been registered: {self.cuenta_ordenante}'
-                    f', stp_id: {self.stp_id}'
-                )
-
         # Don't send if stp_id already exists
         if self.stp_id:
             return Orden(  # type: ignore
@@ -202,9 +134,8 @@ class Transaction(Document, BaseModel):
                 **optionals,
             )
         except (Exception) as e:  # Anything can happen here
-            self.events.append(Event(type=EventType.error, metadata=str(e)))
-            self.estado = Estado.error
             self.save()
+            Event(target_document_id=str(self.id), metadata=str(e)).save()
             raise e
         else:
             self.clave_rastreo = self.clave_rastreo or order.claveRastreo
@@ -217,9 +148,6 @@ class Transaction(Document, BaseModel):
             self.empresa = self.empresa or STP_EMPRESA
             self.stp_id = order.id
 
-            self.events.append(
-                Event(type=EventType.completed, metadata=str(order))
-            )
             self.estado = Estado.submitted
             self.save()
             return order

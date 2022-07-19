@@ -2,9 +2,10 @@ import click
 from mongoengine import DoesNotExist
 
 from speid import app
-from speid.helpers.callback_helper import set_status_transaction
-from speid.models import Event, Transaction
-from speid.types import Estado, EventType
+from speid.backend_client import BackendClient
+from speid.models import Transaction
+from speid.types import Estado
+from speid.validations import UpdateSpeidTransaction
 
 
 @app.cli.group('speid')
@@ -14,33 +15,33 @@ def speid_group():
 
 
 @speid_group.command()
-@click.argument('transaction_id', type=str)
+@click.argument('speid_id', type=str)
 @click.argument('transaction_status', type=str)
-def callback_spei_transaction(transaction_id, transaction_status):
+def set_status_transaction(speid_id, transaction_status):
     """Establece el estado de la transacción,
     valores permitidos succeeded y failed"""
-    transaction = Transaction.objects.get(id=transaction_id)
+    transaction = Transaction.objects.get(speid_id=speid_id)
     if transaction_status == Estado.succeeded.value:
-        transaction.estado = Estado.succeeded
-        event_type = EventType.completed
+        status = Estado.succeeded
     elif transaction_status == Estado.failed.value:
-        transaction.estado = Estado.failed
-        event_type = EventType.error
+        status = Estado.failed
     else:
         raise ValueError('Invalid event type')
-    set_status_transaction(transaction.speid_id, transaction.estado.value)
-    transaction.events.append(
-        Event(type=event_type, metadata=str('Reversed by SPEID command'))
-    )
+    transaction.set_status(status)
     transaction.save()
+    update_order = UpdateSpeidTransaction(
+        speid_id=transaction.speid_id,
+        orden_id=transaction.stp_id,
+        estado=status,
+    )
+    client = BackendClient()
+    client.update_order(update_order)
 
 
 @speid_group.command()
 @click.argument('speid_id', type=str)
 def re_execute_transactions(speid_id):
-    """Retry send a transaction to STP, it takes the values
-    of the event created before
-    """
+    """Envía la transacción a STP"""
     try:
         transaction = Transaction.objects.get(speid_id=speid_id)
     except DoesNotExist:
@@ -50,4 +51,4 @@ def re_execute_transactions(speid_id):
 
 
 if __name__ == "__main__":
-    re_execute_transactions()  # pragma: no cover
+    ...  # pragma: no cover

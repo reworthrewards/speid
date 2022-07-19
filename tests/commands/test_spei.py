@@ -3,7 +3,7 @@ from click.testing import CliRunner
 
 from speid.commands.spei import speid_group
 from speid.models import Transaction
-from speid.types import Estado, EventType
+from speid.types import Estado
 
 
 @pytest.fixture
@@ -27,43 +27,42 @@ def transaction():
     transaction.delete()
 
 
-def test_callback_spei_transaction(mock_callback_queue, transaction):
+def test_set_status_transaction(mock_backend, transaction):
     id_trx = transaction.id
     assert transaction.estado is Estado.created
 
     runner = CliRunner()
     runner.invoke(
-        speid_group, ['callback-spei-transaction', str(id_trx), 'succeeded']
+        speid_group,
+        ['set-status-transaction', str(transaction.speid_id), 'succeeded'],
     )
 
     transaction = Transaction.objects.get(id=id_trx)
     assert transaction.estado is Estado.succeeded
-    assert transaction.events[-1].type is EventType.completed
-    assert transaction.events[-1].metadata == 'Reversed by SPEID command'
 
 
-def test_callback_spei_failed_transaction(mock_callback_queue, transaction):
+def test_set_status_failed_transaction(mock_backend, transaction):
     id_trx = transaction.id
     assert transaction.estado is Estado.created
 
     runner = CliRunner()
     runner.invoke(
-        speid_group, ['callback-spei-transaction', str(id_trx), 'failed']
+        speid_group,
+        ['set-status-transaction', str(transaction.speid_id), 'failed'],
     )
 
     transaction = Transaction.objects.get(id=id_trx)
     assert transaction.estado is Estado.failed
-    assert transaction.events[-1].type is EventType.error
-    assert transaction.events[-1].metadata == 'Reversed by SPEID command'
 
 
-def test_callback_spei_invalid_transaction(mock_callback_queue, transaction):
+def test_set_status_invalid_transaction(mock_backend, transaction):
     id_trx = transaction.id
     assert transaction.estado is Estado.created
 
     runner = CliRunner()
     result = runner.invoke(
-        speid_group, ['callback-spei-transaction', str(id_trx), 'invalid']
+        speid_group,
+        ['set-status-transaction', str(transaction.speid_id), 'invalid'],
     )
 
     transaction = Transaction.objects.get(id=id_trx)
@@ -72,7 +71,7 @@ def test_callback_spei_invalid_transaction(mock_callback_queue, transaction):
 
 
 @pytest.mark.vcr
-def test_re_execute_transactions(runner, transaction, physical_account):
+def test_re_execute_transactions(runner, transaction):
     id_trx = transaction.id
     assert transaction.estado is Estado.created
 
@@ -84,12 +83,9 @@ def test_re_execute_transactions(runner, transaction, physical_account):
     transaction = Transaction.objects.get(id=id_trx)
 
     assert transaction.estado is Estado.submitted
-    assert transaction.events[-1].type is EventType.completed
 
 
-def test_re_execute_transaction_not_found(
-    runner, transaction, physical_account
-):
+def test_re_execute_transaction_not_found(runner, transaction):
     id_trx = transaction.id
     assert transaction.estado is Estado.created
 

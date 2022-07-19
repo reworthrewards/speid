@@ -1,4 +1,11 @@
-__all__ = ['STP_EMPRESA', 'commands', 'models', 'views']
+__all__ = [
+    'STP_EMPRESA',
+    'backend_client',
+    'config',
+    'commands',
+    'models',
+    'views',
+]
 
 import datetime as dt
 import json
@@ -49,6 +56,7 @@ def configure_environment():
 # Configura sentry
 sentry_sdk.init(
     dsn=os.environ['SENTRY_DSN'],
+    environment=os.environ['SENTRY_ENVIRONMENT'],
     integrations=[FlaskIntegration(), CeleryIntegration()],
 )
 
@@ -75,4 +83,10 @@ configure_environment()
 with open(STP_PRIVATE_LOCATION) as fp:
     private_key = fp.read()
 
-from . import commands, models, views  # noqa: E402 isort:skip
+from . import (  # noqa: E402 isort:skip
+    backend_client,
+    commands,
+    config,
+    models,
+    views,
+)

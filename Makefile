@@ -11,15 +11,8 @@ install:
 	pip install -q -r requirements.txt
 
 install-dev:
-# Trying to install `flask-mongoengine` package in virtual environment of GitHub Actions
-# fails because `wheel` package is needed to build that package. It only fails in GitHub actions
-# Inside docker container it works Ok.
-# The issue reportig this problem is https://github.com/MongoEngine/flask-mongoengine/issues/402
-	pip install -q wheel
 	$(MAKE) install
 	pip install -q -r requirements-dev.txt
-
-install-test: install-dev
 
 venv:
 	$(PYTHON) -m venv --prompt $(PROJECT) venv
@@ -54,7 +47,7 @@ test: clean lint
 	pytest --cov-report term-missing tests/ --cov=speid
 
 
-travis-test:
+ci-test:
 	$(MAKE) install-dev
 	$(MAKE) lint
 	$(MAKE) docker-build

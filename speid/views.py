@@ -2,13 +2,18 @@ import json
 import logging
 
 from flask import request
+from mongoengine import NotUniqueError
 from sentry_sdk import capture_exception
 
 from speid import app
-from speid.helpers.transaction_helper import process_incoming_transaction
-from speid.models import Transaction
+from speid.config import CREATE_ORDER_URL, UPDATE_ORDER_URL
+from speid.models import Event, Transaction
+from speid.models.helpers import base62_uuid
+from speid.processors import backend_client
+from speid.tasks.orders import send_order
 from speid.types import Estado
 from speid.utils import post
+from speid.validations import StpTransaction, UpdateSpeidTransaction
 
 logging.basicConfig(level=logging.INFO, format='SPEID: %(message)s')
 
@@ -19,7 +24,7 @@ def health_check():
     return "I'm healthy!"
 
 
-@app.route('/orden_events', methods=['POST'])
+@app.route(UPDATE_ORDER_URL, methods=['POST'])
 def create_orden_events():
     try:
         transaction = Transaction.objects.get(stp_id=request.json['id'])
@@ -29,7 +34,13 @@ def create_orden_events():
         if state is Estado.failed:
             assert transaction.estado is not Estado.failed
 
-        transaction.set_state(state)
+        transaction.set_status(state)
+        update_request = UpdateSpeidTransaction(
+            id=transaction.speid_id,
+            empresa=transaction.empresa,
+            estado=state,
+        )
+        backend_client.update_order(update_request)
 
         transaction.save()
     except Exception as exc:
@@ -38,9 +49,37 @@ def create_orden_events():
     return "got it!"
 
 
-@post('/ordenes')
+@post(CREATE_ORDER_URL)
 def create_orden():
-    response = process_incoming_transaction(request.json)
+    transaction = Transaction()
+    try:
+        abono = request.json['abono']
+        external_tx = StpTransaction(**abono)  # type: ignore
+        transaction = external_tx.transform()
+        transaction.estado = Estado.succeeded
+        transaction.save()
+        backend_client.receive_order(request.json)
+        response = request.json
+        response['estado'] = Estado.convert_to_stp_state(transaction.estado)
+    except (NotUniqueError, TypeError) as e:
+        response = dict(estado='LIQUIDACION')
+        capture_exception(e)
+    except Exception as e:
+        response = dict(estado='LIQUIDACION')
+        transaction.estado = Estado.error
+        transaction.save()
+        Event(target_document_id=str(transaction.id), metadata=str(e)).save()
+        transaction.save()
+        capture_exception(e)
+    return 201, response
+
+
+@post('/registra')
+def incoming_order():
+    body = request.json
+    body['speid_id'] = base62_uuid('SP')()
+    response = dict(resultado=dict(id=body['speid_id'], data=request.json))
+    send_order.apply_async(kwargs={'order_values': body})
     return 201, response
 
 
