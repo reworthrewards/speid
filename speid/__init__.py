@@ -18,14 +18,7 @@ from python_hosts import Hosts, HostsEntry
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.flask import FlaskIntegration
 
-from .config import (
-    DATABASE_URI,
-    EDIT_HOSTS,
-    HOST_AD,
-    HOST_IP,
-    SENTRY_DSN,
-    SENTRY_ENVIRONMENT,
-)
+from .config import DATABASE_URI, SENTRY_DSN, SENTRY_ENVIRONMENT
 
 
 class CJSONEncoder(json.JSONEncoder):
@@ -43,6 +36,8 @@ class CJSONEncoder(json.JSONEncoder):
 
 
 def configure_environment():
+    from .config import EDIT_HOSTS, HOST_AD, HOST_IP
+
     # Edita archivo hosts si es necesario
     if EDIT_HOSTS == 'true':
         host_ip = HOST_IP
