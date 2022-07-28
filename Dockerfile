@@ -10,7 +10,7 @@ RUN make install
 # Add repo contents to image
 ADD . /speid/
 
-ENV PORT 3000
+ENV PORT 80
 EXPOSE $PORT
 
 CMD celery -A speid.tasks.celery worker -D --loglevel=info -c 5 && \
