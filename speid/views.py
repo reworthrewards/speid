@@ -6,7 +6,12 @@ from mongoengine import NotUniqueError
 from sentry_sdk import capture_exception
 
 from speid import app
-from speid.config import CREATE_ORDER_URL, UPDATE_ORDER_URL
+from speid.config import (
+    CREATE_ORDER_URL,
+    SUCCESSFUL_RESPONSE_KEY,
+    SUCCESSFUL_RESPONSE_VALUE,
+    UPDATE_ORDER_URL,
+)
 from speid.models import Event, Transaction
 from speid.models.helpers import base62_uuid
 from speid.processors import backend_client
@@ -60,12 +65,12 @@ def create_orden():
         transaction.save()
         backend_client.receive_order(request.json)
         response = request.json
-        response['estado'] = Estado.convert_to_stp_state(transaction.estado)
+        response[SUCCESSFUL_RESPONSE_KEY] = SUCCESSFUL_RESPONSE_VALUE
     except (NotUniqueError, TypeError) as e:
-        response = dict(estado='LIQUIDACION')
+        response = {SUCCESSFUL_RESPONSE_KEY: SUCCESSFUL_RESPONSE_VALUE}
         capture_exception(e)
     except Exception as e:
-        response = dict(estado='LIQUIDACION')
+        response = {SUCCESSFUL_RESPONSE_KEY: SUCCESSFUL_RESPONSE_VALUE}
         transaction.estado = Estado.error
         transaction.save()
         Event(target_document_id=str(transaction.id), metadata=str(e)).save()
