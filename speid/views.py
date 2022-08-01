@@ -17,7 +17,7 @@ from speid.models.helpers import base62_uuid
 from speid.processors import backend_client
 from speid.tasks.orders import send_order
 from speid.types import Estado
-from speid.utils import post
+from speid.utils import post, put
 from speid.validations import StpTransaction, UpdateSpeidTransaction
 
 logging.basicConfig(level=logging.INFO, format='SPEID: %(message)s')
@@ -79,7 +79,7 @@ def create_orden():
     return 201, response
 
 
-@post('/registra')
+@put('/registra')
 def incoming_order():
     body = request.json
     body['speid_id'] = base62_uuid('SP')()

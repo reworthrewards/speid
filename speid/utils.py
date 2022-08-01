@@ -19,3 +19,17 @@ def post(rule: str, **options):
         return view
 
     return decorator
+
+
+def put(rule: str, **options):
+    def decorator(view):
+        @wraps(view)
+        def decorated(*args, **kwargs):
+            status_code, body = view(*args, **kwargs)
+            return make_response(jsonify(body), status_code)
+
+        endpoint = options.pop('endpoint', None)
+        app.add_url_rule(rule, endpoint, decorated, methods=['PUT'], **options)
+        return view
+
+    return decorator
