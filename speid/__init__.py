@@ -9,16 +9,16 @@ __all__ = [
 
 import datetime as dt
 import json
-import os
 from enum import Enum
 
-import boto3
 import sentry_sdk
 from flask import Flask
 from flask_mongoengine import MongoEngine
 from python_hosts import Hosts, HostsEntry
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.flask import FlaskIntegration
+
+from .config import DATABASE_URI, SENTRY_DSN, SENTRY_ENVIRONMENT
 
 
 class CJSONEncoder(json.JSONEncoder):
@@ -36,15 +36,12 @@ class CJSONEncoder(json.JSONEncoder):
 
 
 def configure_environment():
-    # Descarga la private key de S3
-    if 'AWS_ACCESS_KEY_ID' in os.environ:
-        s3 = boto3.client('s3')
-        s3.download_file(STP_BUCKET_S3, STP_PRIVATE_KEY, STP_PRIVATE_LOCATION)
+    from .config import EDIT_HOSTS, HOST_AD, HOST_IP
 
     # Edita archivo hosts si es necesario
-    if os.environ['EDIT_HOSTS'] == 'true':
-        host_ip = os.environ['HOST_IP']
-        host_ad = os.environ['HOST_AD']
+    if EDIT_HOSTS == 'true':
+        host_ip = HOST_IP
+        host_ad = HOST_AD
         hosts = Hosts()
         new_entry = HostsEntry(
             entry_type='ipv4', address=host_ip, names=[host_ad]
@@ -55,19 +52,10 @@ def configure_environment():
 
 # Configura sentry
 sentry_sdk.init(
-    dsn=os.environ['SENTRY_DSN'],
-    environment=os.environ['SENTRY_ENVIRONMENT'],
+    dsn=SENTRY_DSN,
+    environment=SENTRY_ENVIRONMENT,
     integrations=[FlaskIntegration(), CeleryIntegration()],
 )
-
-# Obtiene las variables de ambiente
-STP_PRIVATE_LOCATION = os.environ['STP_PRIVATE_LOCATION']
-STP_BUCKET_S3 = os.environ['STP_BUCKET_S3']
-STP_PRIVATE_KEY = os.environ['STP_PRIVATE_KEY']
-STP_WSDL = os.environ['STP_WSDL']
-STP_EMPRESA = os.environ['STP_EMPRESA']
-STP_PREFIJO = os.environ['STP_PREFIJO']
-DATABASE_URI = os.environ['DATABASE_URI']
 
 app = Flask('speid')
 
@@ -78,10 +66,6 @@ app.json_encoder = CJSONEncoder  # type: ignore
 db = MongoEngine(app)
 
 configure_environment()
-
-# Configura el cliente STP
-with open(STP_PRIVATE_LOCATION) as fp:
-    private_key = fp.read()
 
 from . import (  # noqa: E402 isort:skip
     backend_client,

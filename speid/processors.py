@@ -1,24 +1,17 @@
-import os
-
 from stpmex import Client
 
 from speid.backend_client import BackendClient
-
-STP_PRIVATE_LOCATION = os.environ['STP_PRIVATE_LOCATION']
-STP_EMPRESA = os.environ['STP_EMPRESA']
-STP_KEY_PASSPHRASE = os.environ['STP_KEY_PASSPHRASE']
-STP_BASE_URL = os.getenv('STP_BASE_URL', None)
-SPEID_ENV = os.getenv('SPEID_ENV', '')
-
-
-# Configura el cliente STP
-with open(STP_PRIVATE_LOCATION) as fp:
-    private_key = fp.read()
-
+from speid.config import (
+    SPEID_ENV,
+    STP_BASE_URL,
+    STP_EMPRESA,
+    STP_KEY_PASSPHRASE,
+    STP_PRIVATE_KEY,
+)
 
 stpmex_client = Client(
     empresa=STP_EMPRESA,
-    priv_key=private_key,
+    priv_key=STP_PRIVATE_KEY,
     priv_key_passphrase=STP_KEY_PASSPHRASE,
     demo=SPEID_ENV != 'prod',
     base_url=STP_BASE_URL,
