@@ -1,4 +1,4 @@
-blinker==1.4
+blinker==1.5
 celery[sqs]==5.2.3
 cepmex==0.2.1
 Flask==2.0.3
