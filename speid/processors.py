@@ -1,5 +1,3 @@
-from stpmex import Client
-
 from speid.backend_client import BackendClient
 from speid.config import (
     SPEID_ENV,
@@ -8,8 +6,9 @@ from speid.config import (
     STP_KEY_PASSPHRASE,
     STP_PRIVATE_KEY,
 )
+from speid.stp_client import StpClient
 
-stpmex_client = Client(
+stpmex_client = StpClient(
     empresa=STP_EMPRESA,
     priv_key=STP_PRIVATE_KEY,
     priv_key_passphrase=STP_KEY_PASSPHRASE,
