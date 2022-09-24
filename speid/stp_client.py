@@ -1,17 +1,27 @@
-from stpmex import Client
 from typing import Optional
-from requests import Session
-from stpmex.version import __version__ as client_version
-from stpmex.client import DEMO_HOST, PROD_HOST
+
 from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from stpmex.resources import Resource
+from requests import Session
+from stpmex import Client
+from stpmex.client import DEMO_HOST, PROD_HOST
 from stpmex.exc import InvalidPassphrase
+from stpmex.resources import Resource
+from stpmex.version import __version__ as client_version
 
 
 class StpClient(Client):
-    def __init__(self, empresa: str, priv_key: str, priv_key_passphrase: Optional[str], demo: bool = False, base_url: str = None, soap_url: str = None, timeout: tuple = None):
+    def __init__(
+        self,
+        empresa: str,
+        priv_key: str,
+        priv_key_passphrase: Optional[str],
+        demo: bool = False,
+        base_url: str = None,
+        soap_url: str = None,
+        timeout: tuple = None,
+    ):
         self.timeout = timeout
         self.session = Session()
         self.session.headers['User-Agent'] = f'stpmex-python/{client_version}'
@@ -29,7 +39,9 @@ class StpClient(Client):
         try:
             self.pkey = serialization.load_pem_private_key(
                 priv_key.encode('utf-8'),
-                priv_key_passphrase.encode('ascii') if priv_key_passphrase else None,
+                priv_key_passphrase.encode('ascii')
+                if priv_key_passphrase
+                else None,
                 default_backend(),
             )
         except (ValueError, TypeError, UnsupportedAlgorithm):
