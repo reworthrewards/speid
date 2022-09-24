@@ -1,7 +1,7 @@
 blinker==1.5
 celery[sqs]==5.2.7
 cepmex==0.2.1
-Flask==2.0.3
+Flask==2.2.2
 flask-mongoengine==1.0.0
 luhnmod10==1.0.2
 mongoengine==0.24.2
