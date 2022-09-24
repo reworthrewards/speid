@@ -1,4 +1,4 @@
-from stpmex import Client
+from speid.stp_client import StpClient
 
 from speid.backend_client import BackendClient
 from speid.config import (
