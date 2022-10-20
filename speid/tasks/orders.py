@@ -47,8 +47,8 @@ def execute(order_values: dict):
         transaction.set_status(Estado.error)
         transaction.save()
         update_request = UpdateSpeidTransaction(
-            id=transaction.speid_id,
-            empresa=transaction.empresa,
+            id=order_values['speid_id'],
+            empresa=order_values['empresa'],
             estado=Estado.error,
         )
         backend_client.update_order(update_request)
