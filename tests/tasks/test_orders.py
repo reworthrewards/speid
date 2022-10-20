@@ -17,6 +17,8 @@ def test_retry_timeout(attempts, expected):
 
 def test_malformed_order_worker(mock_backend):
     order = dict(
+        speid_id='speid_id',
+        empresa='empresa',
         concepto_pago='PRUEBA',
         institucion_ordenante='646',
         cuenta_beneficiario='072691004495711499',
@@ -77,8 +79,34 @@ def test_worker():
     transaction.delete()
 
 
+def test_invalid_amount(mock_backend):
+    order = dict(
+        concepto_pago='PRUEBA Version 2',
+        institucion_operante='90646',
+        cuenta_beneficiario='072691004495711499',
+        institucion_contraparte='40072',
+        monto=-1020,
+        nombre_beneficiario='Pablo Sánchez',
+        nombre_ordenante='BANCO',
+        cuenta_ordenante='646180157000000004',
+        rfc_curp_ordenante='ND',
+        speid_id='ANOTHER_RANDOM_ID',
+        empresa='EMPRESA',
+        version=2,
+    )
+    send_order(order)
+
+    transaction = Transaction.objects.order_by('-created_at').first()
+
+    assert transaction.estado is Estado.failed
+    assert transaction.speid_id == 'ANOTHER_RANDOM_ID'
+    transaction.delete()
+
+
 @patch('speid.tasks.orders.capture_exception')
-def test_malformed_order_exception(mock_capture_exception: MagicMock):
+def test_malformed_order_exception(
+    mock_capture_exception: MagicMock, mock_backend
+):
     order = dict(
         concepto_pago='PRUEBA Version 2',
         institucion_operante='90646',
@@ -90,6 +118,7 @@ def test_malformed_order_exception(mock_capture_exception: MagicMock):
         cuenta_ordenante='646180157000000004',
         rfc_curp_ordenante='ND',
         speid_id='ANOTHER_RANDOM_ID',
+        empresa='EMPRESA',
         version=2,
     )
     send_order(order)
