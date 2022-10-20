@@ -1,13 +1,15 @@
+import datetime as dt
 import clabe
 import luhnmod10
 from mongoengine import DoesNotExist
 from sentry_sdk import capture_exception
 
 from speid.exc import MalformedOrderException, ResendSuccessOrderException
+from speid.processors import backend_client
 from speid.models import Transaction
 from speid.tasks import celery
 from speid.types import Estado
-from speid.validations import SpeidTransaction
+from speid.validations import SpeidTransaction, UpdateSpeidTransaction
 
 
 def retry_timeout(attempts: int) -> int:
@@ -43,6 +45,8 @@ def execute(order_values: dict):
     except (MalformedOrderException, TypeError, ValueError):
         transaction.set_status(Estado.error)
         transaction.save()
+        update_request = UpdateSpeidTransaction(id=transaction.speid_id, empresa=transaction.empresa, estado=Estado.error)
+        backend_client.update_order(update_request)
         raise MalformedOrderException()
 
     try:
@@ -59,4 +63,12 @@ def execute(order_values: dict):
         # Para evitar que se vuelva a mandar o regresar se manda la excepción
         raise ResendSuccessOrderException()
 
-    transaction.create_order()
+    now = dt.datetime.utcnow()
+    try:
+        assert (now - transaction.created_at) < dt.timedelta(hours=2)
+        transaction.create_order()
+    except AssertionError:
+        transaction.set_status(Estado.failed)
+        update_request = UpdateSpeidTransaction(id=transaction.speid_id, empresa=transaction.empresa, estado=Estado.failed)
+        backend_client.update_order(update_request)
+        transaction.save()
