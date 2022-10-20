@@ -1,12 +1,13 @@
 import datetime as dt
+
 import clabe
 import luhnmod10
 from mongoengine import DoesNotExist
 from sentry_sdk import capture_exception
 
 from speid.exc import MalformedOrderException, ResendSuccessOrderException
-from speid.processors import backend_client
 from speid.models import Transaction
+from speid.processors import backend_client
 from speid.tasks import celery
 from speid.types import Estado
 from speid.validations import SpeidTransaction, UpdateSpeidTransaction
@@ -45,7 +46,11 @@ def execute(order_values: dict):
     except (MalformedOrderException, TypeError, ValueError):
         transaction.set_status(Estado.error)
         transaction.save()
-        update_request = UpdateSpeidTransaction(id=transaction.speid_id, empresa=transaction.empresa, estado=Estado.error)
+        update_request = UpdateSpeidTransaction(
+            id=transaction.speid_id,
+            empresa=transaction.empresa,
+            estado=Estado.error,
+        )
         backend_client.update_order(update_request)
         raise MalformedOrderException()
 
@@ -69,6 +74,10 @@ def execute(order_values: dict):
         transaction.create_order()
     except AssertionError:
         transaction.set_status(Estado.failed)
-        update_request = UpdateSpeidTransaction(id=transaction.speid_id, empresa=transaction.empresa, estado=Estado.failed)
+        update_request = UpdateSpeidTransaction(
+            id=transaction.speid_id,
+            empresa=transaction.empresa,
+            estado=Estado.failed,
+        )
         backend_client.update_order(update_request)
         transaction.save()
