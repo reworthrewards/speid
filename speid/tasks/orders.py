@@ -3,6 +3,7 @@ import datetime as dt
 import clabe
 import luhnmod10
 from mongoengine import DoesNotExist
+from pydantic import ValidationError
 from sentry_sdk import capture_exception
 
 from speid.exc import MalformedOrderException, ResendSuccessOrderException
@@ -72,7 +73,7 @@ def execute(order_values: dict):
     try:
         assert (now - transaction.created_at) < dt.timedelta(hours=2)
         transaction.create_order()
-    except AssertionError:
+    except (AssertionError, ValidationError):
         transaction.set_status(Estado.failed)
         update_request = UpdateSpeidTransaction(
             id=transaction.speid_id,
